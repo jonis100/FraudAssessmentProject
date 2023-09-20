@@ -1,0 +1,32 @@
+package com.example.order.rules
+
+import com.Order;
+
+// Suspicious high-value order with expedited shipping
+rule "High Value Express Order"
+    ruleflow-group "INTUIT"
+    
+    when
+        $order : Order(orderValue > 1000.0, expeditedShipping == true)
+        eval(!$order.getCustomer().isPremiumMember())
+    then
+        $order.setRecommendation("CHALLENGE");
+end
+
+// Pass small orders without expedited shipping
+rule "Small Regular Order"
+    when
+        $order : Order(orderValue < 50.0, expeditedShipping == false)
+    then
+        $order.setRecommendation("PASS");
+end
+
+// Block large orders with only a few items (possible price error or scam)
+rule "Large Order Few Items"
+    when
+        $order : Order(orderValue > 500.0, itemsCount < 3)
+        // If silentMode is true, this rule shouldn't change the recommendation.
+        eval(!$order.isSilentMode())
+    then
+        $order.setRecommendation("BLOCK");
+end

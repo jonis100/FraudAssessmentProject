@@ -1,0 +1,31 @@
+package com
+
+import com.Product;
+
+// High priced product with low ratings
+rule "Expensive Low-Rated Product"
+    ruleflow-group "INTUIT"
+    
+    when
+        $product : Product(price > 500.0, averageRating < 2.5)
+    then
+        $product.setRecommendation("CHALLENGE");
+end
+
+// Popular product with good stock
+rule "Popular Stocked Product"
+    when
+        $product : Product(stockQuantity > 100, averageRating > 4.0)
+    then
+        $product.setRecommendation("PASS");
+end
+
+// Block products that are very cheap and have high ratings (potential fake reviews)
+rule "Too Good To Be True Product"
+    when
+        $product : Product(price < 5.0, averageRating > 4.5)
+        // If silentMode is true, this rule shouldn't change the recommendation.
+        eval(!$product.isSilentMode())
+    then
+        $product.setRecommendation("BLOCK");
+end

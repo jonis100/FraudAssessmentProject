@@ -1,0 +1,31 @@
+package com
+
+import com.Customer;
+
+// Check if customer is potentially a bot
+rule "Customer Bot Check"
+    ruleflow-group "INTUIT"
+    
+    when
+        $customer : Customer(premiumMember == false, transactionCountLastMonth > 100, averageTransactionValue < 5.0)
+         // If silentMode is true, this rule shouldn't change the recommendation.
+        eval(!$customer.isSilentMode())
+    then
+        $customer.setRecommendation("BLOCK");
+end
+
+// Check if customer is a loyal premium member
+rule "Premium Member Loyalty"
+    when
+        $customer : Customer(premiumMember == true, transactionCountLastMonth > 50)
+    then
+        $customer.setRecommendation("PASS");
+end
+
+// Challenge young customers with few transactions
+rule "Young Customer Verification"
+    when
+        $customer : Customer(age < 20, transactionCountLastMonth < 5)
+    then
+        $customer.setRecommendation("CHALLENGE");
+end
